@@ -1,24 +1,21 @@
 import os
 import pandas as pd
+import numpy as np
+from openpyxl.workbook import Workbook
 
 # ENGINE
 def runEngine():
     statementFolder = r"Money management\Statements"
     outputFolder = r"Money management\Outputs"
 
-    allData = pd.DataFrame(columns=["Card", "Date of purchase", "Vendor", "Debit amount", "Credit amount" "Type of purchase", "Share"])
+    allData = pd.DataFrame(columns=['date', 'vendor', 'debit', 'credit', 'bank', 'card'])
 
     for filename in os.listdir(statementFolder):
         documentPath = os.path.join(statementFolder, filename)
         data = extractEngine(filename, documentPath)
-        '''allData = pd.concat([allData, pd.DataFrame({
-            "Card": [pCard],
-            "Date of purchase": [pDate],
-            "Vendor": [pVendor],
-            "Debit amount": [pDebit],
-            "Credit amount": [pCredit],
-            "Type of purchase": [pType],
-            "Share": [pShare]})], ignore_index=True)'''
+        allData = pd.concat([allData, data], ignore_index=True)
+
+    outputEngine(allData, outputFolder)
 
 def extractEngine(filename, documentPath):
     csvData = ''
@@ -26,40 +23,45 @@ def extractEngine(filename, documentPath):
     if filename.startswith(("cibc")):
         # Column names NOT PROVIDED; added
         df = pd.read_csv(documentPath, header=None, names=['date', 'vendor', 'debit', 'credit', 'cc number'])
-        pCard = filename
-        pDate = df['date']
-        pVendor = df['vendor']
-        pDebit = df['debit']
-        pCredit = df['credit']
-        pType = []
-        pShare = []
 
         df.drop(columns=['cc number'], inplace=True)
 
-        print(df.to_string())
+        # TODO Automate based on filename (need to standardize)
+        df['bank'] = 'CIBC'
+        df['card'] = 'VISA'
+
+        return df
 
     if filename.startswith(("rbc")):
         # Column names PROVIDED; removed then added
         df = pd.read_csv(documentPath, skiprows=1, header=None, names=['card', 'account type', 'date', 'b1', 'vendor', 'b2', 'debit', 'b3', 'b4'])
-        pCard = filename
-        pDate = df['date']
-        pVendor = df['vendor']
-        pDebit = df['debit']
-        #pCredit = df['credit']
-        pType = []
-        pShare = []
         
+        # DATA STD: CREDIT + DEBIT
         df.drop(columns=['card', "account type", "b1", "b2", "b3", "b4"], inplace=True)
         df['credit'] = df['debit'].apply(migrateCredits)
+        df['debit'] = df['debit'].apply(abs)
+        for index, row in df.iterrows():
+            if row['debit'] == row['credit']:
+                df.at[index, 'debit'] = float('nan')
 
-        print(df.to_string())
+        # DATA STD: DATE
+        for index, row in df.iterrows():
+            df.at[index, 'date'] = pd.to_datetime(row['date'], format='%m/%d/%Y').strftime('%Y-%m-%d')
 
-        ## TODO remove positive numbers from credit column after migrateCredits, then apply absolute value to the negative numbers
-        
-    return csvData
+        # TODO Automate based on filename (need to standardize)
+        df['bank'] = 'RBC'
+        df['card'] = 'VISA'
 
-def migrateCredits(amt):
-    return amt if amt > 0 else None
+        return df
+
+def migrateCredits(credit):
+    return credit if credit > 0 else None
+
+def outputEngine(allData, outputFolder):
+    output_file = os.path.join(outputFolder, "output_data.xlsx")
+    allData.to_excel(output_file, sheet_name="tester", index=False)
+
+    print("Data saved to:", output_file)
 
 # RUN
 runEngine()
