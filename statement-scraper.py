@@ -18,8 +18,6 @@ def runEngine():
     outputEngine(allData, outputFolder)
 
 def extractEngine(filename, documentPath):
-    csvData = ''
-
     if filename.startswith(("cibc")):
         # Column names NOT PROVIDED; added
         df = pd.read_csv(documentPath, header=None, names=['date', 'vendor', 'debit', 'credit', 'cc number'])
@@ -58,10 +56,10 @@ def migrateCredits(credit):
     return credit if credit > 0 else None
 
 def outputEngine(allData, outputFolder):
-    output_file = os.path.join(outputFolder, "output_data.xlsx")
-    allData.to_excel(output_file, sheet_name="tester", index=False)
+    outputPath = os.path.join(outputFolder, "output_data.xlsx")
+    allData.to_excel(outputPath, sheet_name="Statement data", index=False)
 
-    print("Data saved to:", output_file)
+    print("Data saved to:", outputPath)
 
 # RUN
 runEngine()
