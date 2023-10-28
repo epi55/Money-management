@@ -25,8 +25,9 @@ def extractEngine(filename, documentPath):
         df.drop(columns=['cc number'], inplace=True)
 
         # TODO Automate based on filename (need to standardize)
-        df['bank'] = 'CIBC'
-        df['card'] = 'VISA'
+        cardList = filename.split(' ')
+        df['bank'] = cardList[0]
+        df['card'] = cardList[1] + ' ' + cardList[2]
 
         return df
 
@@ -43,12 +44,13 @@ def extractEngine(filename, documentPath):
                 df.at[index, 'debit'] = float('nan')
 
         # DATA STD: DATE
-        for index, row in df.iterrows():
-            df.at[index, 'date'] = pd.to_datetime(row['date'], format='%m/%d/%Y').strftime('%Y-%m-%d')
+        #for index, row in df.iterrows():
+        #    df.at[index, 'date'] = pd.to_datetime(row['date'], format='%m/%d/%Y').strftime('%Y-%m-%d')
 
         # TODO Automate based on filename (need to standardize)
-        df['bank'] = 'RBC'
-        df['card'] = 'VISA'
+        cardList = filename.split(' ')
+        df['bank'] = cardList[0]
+        df['card'] = cardList[1] + ' ' + cardList[2]
 
         return df
 
