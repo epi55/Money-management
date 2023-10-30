@@ -1,3 +1,4 @@
+# IMPORTS
 import os
 import re
 import nltk
@@ -8,12 +9,12 @@ from openpyxl.workbook import Workbook
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 
-# ENGINE
+# ENGINES
 def runEngine():
     statementFolder = r"Money management\Statements"
     outputFolder = r"Money management\Outputs"
 
-    allData = pd.DataFrame(columns=['date', 'vendor', 'debit', 'credit', 'bank', 'drop1'])
+    allData = pd.DataFrame(columns=['date', 'vendor', 'debit', 'credit', 'bank', 'card', 'category'])
 
     for filename in os.listdir(statementFolder):
         documentPath = os.path.join(statementFolder, filename)
@@ -94,7 +95,7 @@ def categorizerEngine(df):
     X = vectorizer.fit_transform(df['vendor'])
 
     # Train a Naive Bayes classifier on the extracted features
-    y = df['Category']
+    y = df['category']
     clf = MultinomialNB()
     clf.fit(X, y)
 
@@ -110,7 +111,6 @@ def categorizerEngine(df):
 def outputEngine(allData, outputFolder):
     outputPath = os.path.join(outputFolder, "output_data.xlsx")
     allData.to_excel(outputPath, sheet_name="Statement data", index=False)
-
     print("Data saved to:", outputPath)
 
 # RUN
