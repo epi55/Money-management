@@ -57,6 +57,39 @@ def extractEngine(filename, documentPath):
 def migrateCredits(credit):
     return credit if credit > 0 else None
 
+def categorizerEngine(df):
+    
+    def preprocess(text):
+        text = text.lower()
+        text = re.sub(r'[^\w\s]', '', text)
+        stop_words = set(nltk.corpus.stopwords.words('english'))
+        tokens = nltk.word_tokenize(text)
+        tokens = [token for token in tokens if token not in stop_words]
+        stemmer = nltk.stem.PorterStemmer()
+        tokens = [stemmer.stem(token) for token in tokens]
+        
+        return ' '.join(tokens)
+
+    df['vendor'] = df['vendor'].apply(preprocess)
+
+    # Extract features from the preprocessed text data using bag-of-words model
+    vectorizer = CountVectorizer()
+    X = vectorizer.fit_transform(df['Description'])
+
+    # Train a Naive Bayes classifier on the extracted features
+    y = df['Category']
+    clf = MultinomialNB()
+    clf.fit(X, y)
+
+    # Predict categories for new transactions
+    new_transactions = ['AMAZON.COM*ajlja09ja', 'Shell Oil 4106541031']
+    new_transactions_preprocessed = [preprocess(text) for text in new_transactions]
+    X_new = vectorizer.transform(new_transactions_preprocessed)
+    y_new = clf.predict(X_new)
+
+    # Print the predicted categories for new transactions
+    print(y_new)
+
 def outputEngine(allData, outputFolder):
     outputPath = os.path.join(outputFolder, "output_data.xlsx")
     allData.to_excel(outputPath, sheet_name="Statement data", index=False)
