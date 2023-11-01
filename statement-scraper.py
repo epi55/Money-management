@@ -74,6 +74,9 @@ def extractEngine(filename, documentPath):
         cleanDates(df)
         return df
 
+    # NOTE
+    # Code unique to HSBC CSV files
+    # Adjustments made to standardize data structure for cf.concat
     elif filenameData[0][1] == "hsbc":
         # COL headers NOT provided in CSV
         df = pd.read_csv(documentPath, header=None, names=['drop1', 'date', 'vendor', 'debit'])
