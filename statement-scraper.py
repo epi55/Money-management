@@ -24,12 +24,14 @@ def runEngine():
         else:
             print("Error: \"{}\" is not a CSV file and will be skipped.".format(filename))
 
-    categorizerEngine(allData)
+    #categorizerEngine(allData)
     outputEngine(allData, outputFolder)
 
 def extractEngine(filename, documentPath):
+    filenameData = re.findall(r"([^-]+) - ([^-]+) - ([^-]+) - ([^.]+)", filename)
     
     def migrateCredits(credit):
+        credit = pd.to_numeric(credit)
         return credit if credit > 0 else None
 
     def cleanDates(df):
@@ -38,27 +40,27 @@ def extractEngine(filename, documentPath):
             if not pd.isna(date):
                 df.at[index, 'date'] = date.strftime('%Y-%m-%d')
 
-    def filenameToCols(filename):
-        drop1List = filename.split(' ')
-        df['bank'] = drop1List[0]
-        df['drop1'] = drop1List[1] + ' ' + drop1List[2]
+    def filenameToCols(filenameData):
+        df['person'] = filenameData[0][0]
+        df['bank'] = filenameData[0][1]
+        df['card'] = filenameData[0][2]
 
     # NOTE
     # Code unique to CIBC CSV files
     # Adjustments made to standardize data structure for cf.concat
-    if filename.startswith(("cibc")):
+    if filenameData[0][1] == "cibc":
         # COL headers NOT provided in CSV 
         df = pd.read_csv(documentPath, header=None, names=['date', 'vendor', 'debit', 'credit', 'cc number'])
         df.drop(columns=['cc number'], inplace=True)
 
-        filenameToCols(filename)
+        filenameToCols(filenameData)
         cleanDates(df)
         return df
 
     # NOTE
     # Code unique to RBC CSV files
     # Adjustments made to standardize data structure for cf.concat
-    elif filename.startswith(("rbc")):
+    elif filenameData[0][1] == "rbc":
         # COL headers provided in CSV
         df = pd.read_csv(documentPath, skiprows=1, header=None, names=['drop1', 'drop2', 'date', 'drop3', 'vendor', 'drop4', 'debit', 'drop5', 'drop6'])
         df.drop(columns=['drop1', "drop2", "drop3", "drop4", "drop5", "drop6"], inplace=True)
@@ -68,14 +70,28 @@ def extractEngine(filename, documentPath):
             if row['debit'] == row['credit']:
                 df.at[index, 'debit'] = float('nan')
 
-        filenameToCols(filename)
+        filenameToCols(filenameData)
+        cleanDates(df)
+        return df
+
+    elif filenameData[0][1] == "hsbc":
+        # COL headers NOT provided in CSV
+        df = pd.read_csv(documentPath, header=None, names=['drop1', 'date', 'vendor', 'debit'])
+        df.drop(columns=['drop1'], inplace=True)
+        df['credit'] = df['debit'].apply(migrateCredits)
+        df['debit'] = df['debit'].apply(abs)
+        for index, row in df.iterrows():
+            if row['debit'] == row['credit']:
+                df.at[index, 'debit'] = float('nan')
+
+        filenameToCols(filenameData)
         cleanDates(df)
         return df
     
     else:
         print("##########\n# ERROR\n# \"{}\" is not a recognized bank.\n# Check filename or add additional code to parse file.\n##########".format(filename))
 
-def categorizerEngine(df):
+'''def categorizerEngine(df):
     
     def preprocess(vendorDesc):
         vendorDesc = vendorDesc.lower()
@@ -106,7 +122,7 @@ def categorizerEngine(df):
     y_new = clf.predict(X_new)
 
     # Print the predicted categories for new transactions
-    print(y_new)
+    print(y_new)'''
 
 def outputEngine(allData, outputFolder):
     outputPath = os.path.join(outputFolder, "output_data.xlsx")
