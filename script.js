@@ -1,4 +1,4 @@
-const csvUrl = "C:\Users\malaf\OneDrive\Desktop\Workspace\Code\Projects\Money management\Website";
+const csvUrl = "Money management\Website\output_data.csv";
 
 const layout = {
   title: "Money Management: Credit Cards, Edition 2023",
