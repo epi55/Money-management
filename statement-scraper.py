@@ -6,13 +6,13 @@ from nltk.corpus import stopwords
 import pandas as pd
 import numpy as np
 from openpyxl.workbook import Workbook
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
+#from sklearn.feature_extraction.text import CountVectorizer
+#from sklearn.naive_bayes import MultinomialNB
 
 # ENGINES
 def runEngine():
-    statementFolder = r"Money management\Statements"
-    outputFolder = r"Money management\Outputs"
+    statementFolder = r"Money management\Scraper\Statements"
+    outputFolder = r"Money management\Scraper\Outputs"
 
     allData = pd.DataFrame(columns=['date', 'vendor', 'debit', 'credit', 'bank', 'card', 'category'])
 
@@ -103,15 +103,16 @@ def extractEngine(filename, documentPath):
         tokens = nltk.word_tokenize(vendorDesc)
         tokens = [token for token in tokens if token not in stop_words]
         stemmer = nltk.stem.PorterStemmer()
-        tokens = [stemmer.stem(token) for token in tokens]
-        
+        tokens = [stemmer.stem(token) for token in tokens]       
         return ' '.join(tokens)
+        print(tokens) # TEST
 
     df['vendor'] = df['vendor'].apply(preprocess)
 
     # Extract features from the preprocessed vendorDesc data using bag-of-words model
     vectorizer = CountVectorizer()
     X = vectorizer.fit_transform(df['vendor'])
+    print(X)
 
     # Train a Naive Bayes classifier on the extracted features
     y = df['category']
@@ -127,10 +128,19 @@ def extractEngine(filename, documentPath):
     # Print the predicted categories for new transactions
     print(y_new)'''
 
-def outputEngine(allData, outputFolder):
-    outputPath = os.path.join(outputFolder, "output_data.xlsx")
-    allData.to_excel(outputPath, sheet_name="Statement data", index=False)
-    print("Data saved to:", outputPath)
+outputChoice = input("{}{} What output format would you like?{} Type '1' for CSV, or type '2' for EXCEL.{}".format("####################", "\n#", "\n#", "\n####################"))
+
+if outputChoice == '1':
+    def outputEngine(allData, outputFolder):
+        outputPath = os.path.join(outputFolder, "output_data.csv")
+        allData.to_csv(outputPath, index=False)
+        print("Data saved to:", outputPath)
+
+if outputChoice == '2':
+    def outputEngine(allData, outputFolder):
+        outputPath = os.path.join(outputFolder, "output_data.xlsx")
+        allData.to_excel(outputPath, index=False)
+        print("Data saved to:", outputPath)
 
 # RUN
 runEngine()
