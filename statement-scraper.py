@@ -25,7 +25,7 @@ def runEngine():
             print("Error: \"{}\" is not a CSV file and will be skipped.".format(filename))
 
     #categorizerEngine(allData)
-    outputEngine(allData, outputFolder)
+    outputEngine(allData, outputFolder, outputChoice)
 
 def extractEngine(filename, documentPath):
     filenameData = re.findall(r"([^-]+) - ([^-]+) - ([^-]+) - ([^.]+)", filename)
@@ -39,6 +39,17 @@ def extractEngine(filename, documentPath):
             date = pd.to_datetime(row['date'], format='%m/%d/%y', errors='coerce')
             if not pd.isna(date):
                 df.at[index, 'date'] = date.strftime('%Y-%m-%d')
+                new_date = date.strftime('%B %d, %Y') # Recent add
+                df.insert(1, 'new_date', new_date) # Recent add
+
+    '''def cleanAmounts(df):
+        for index, row in df.itterrows():
+            amount = pd.to_numeric(row['debit'], errors='coerce')
+            if not pd.isna(amount):
+                df.at[index, 'debit'].replace('$', '').float()
+            amount = pd.to_numeric(row['credit'], errors='coerce')
+            if not pd.isna(amount):
+                df.at[index, 'credit'].replace('$', '').float()'''
 
     def filenameToCols(filenameData):
         df['person'] = filenameData[0][0]
@@ -61,18 +72,31 @@ def extractEngine(filename, documentPath):
     # Code unique to RBC CSV files
     # Adjustments made to standardize data structure for cf.concat
     elif filenameData[0][1] == "rbc":
-        # COL headers provided in CSV
-        df = pd.read_csv(documentPath, skiprows=1, header=None, names=['drop1', 'drop2', 'date', 'drop3', 'vendor', 'drop4', 'debit', 'drop5', 'drop6'])
-        df.drop(columns=['drop1', "drop2", "drop3", "drop4", "drop5", "drop6"], inplace=True)
-        df['credit'] = df['debit'].apply(migrateCredits)
-        df['debit'] = df['debit'].apply(abs)
-        for index, row in df.iterrows():
-            if row['debit'] == row['credit']:
-                df.at[index, 'debit'] = float('nan')
+        if filenameData[0][2] == 'checking':
+            df = pd.read_csv(documentPath, skiprows=1, header=None, names=['drop1', 'drop2', 'date', 'drop3', 'vendor', 'drop4', 'debit', 'drop5', 'drop6'])
+            df.drop(columns=['drop1', "drop2", "drop3", "drop4", "drop5", "drop6"], inplace=True)
+            df['credit'] = df['debit'].apply(migrateCredits)
+            df['debit'] = df['debit'].apply(abs)
+            for index, row in df.iterrows():
+                if row['debit'] == row['credit']:
+                    df.at[index, 'debit'] = float('nan')
 
-        filenameToCols(filenameData)
-        cleanDates(df)
-        return df
+            filenameToCols(filenameData)
+            cleanDates(df)
+            return df
+        else:
+            # COL headers provided in CSV
+            df = pd.read_csv(documentPath, skiprows=1, header=None, names=['drop1', 'drop2', 'date', 'drop3', 'vendor', 'drop4', 'debit', 'drop5', 'drop6'])
+            df.drop(columns=['drop1', "drop2", "drop3", "drop4", "drop5", "drop6"], inplace=True)
+            df['credit'] = df['debit'].apply(migrateCredits)
+            df['debit'] = df['debit'].apply(abs)
+            for index, row in df.iterrows():
+                if row['debit'] == row['credit']:
+                    df.at[index, 'debit'] = float('nan')
+
+            filenameToCols(filenameData)
+            cleanDates(df)
+            return df
 
     # NOTE
     # Code unique to HSBC CSV files
@@ -94,11 +118,11 @@ def extractEngine(filename, documentPath):
     else:
         print("##########\n# ERROR\n# \"{}\" is not a recognized bank.\n# Check filename or add additional code to parse file.\n##########".format(filename))
 
-'''def categorizerEngine(df):
+def categorizerEngine(df):
     
     def preprocess(vendorDesc):
         vendorDesc = vendorDesc.lower()
-        vendorDesc = re.sub(r'[^\w\s]', '', vendorDesc)
+        vendorDesc = re.sub(r'[^\\w\\s]', '', vendorDesc)
         stop_words = set(nltk.corpus.stopwords.words('english'))
         tokens = nltk.word_tokenize(vendorDesc)
         tokens = [token for token in tokens if token not in stop_words]
@@ -126,21 +150,19 @@ def extractEngine(filename, documentPath):
     y_new = clf.predict(X_new)
 
     # Print the predicted categories for new transactions
-    print(y_new)'''
-
-outputChoice = input("{}{} What output format would you like?{} Type '1' for CSV, or type '2' for EXCEL.{}".format("####################", "\n#", "\n#", "\n####################"))
-
-if outputChoice == '1':
-    def outputEngine(allData, outputFolder):
+    print(y_new)
+    
+def outputEngine(allData, outputFolder, outputChoice):
+    if outputChoice == '1':
         outputPath = os.path.join(outputFolder, "output_data.csv")
         allData.to_csv(outputPath, index=False)
         print("Data saved to:", outputPath)
 
-if outputChoice == '2':
-    def outputEngine(allData, outputFolder):
+    if outputChoice == '2':
         outputPath = os.path.join(outputFolder, "output_data.xlsx")
         allData.to_excel(outputPath, index=False)
         print("Data saved to:", outputPath)
 
 # RUN
+outputChoice = input("What output format would you like? Type '1' for CSV, or type '2' for EXCEL: ")
 runEngine()
