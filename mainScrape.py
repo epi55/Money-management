@@ -3,8 +3,8 @@ import os
 import re
 import nltk
 from nltk.corpus import stopwords
-import pandas as pd
 import numpy as np
+import pandas as pd
 from openpyxl.workbook import Workbook
 import checkScrape
 import creditScrape
@@ -24,9 +24,15 @@ def runEngine():
             if filenameData[0][2] == 'checking':
                 data = checkScrape.extractEngine(filename, filenameData, documentPath)
                 allData = pd.concat([allData, data], ignore_index=True)
+                ## TESTS
+                print(len(data))
+                print(data)
             elif 'amex' or 'mastercard' or 'visa' in filenameData[0][2]: 
-                data = creditScrape.extractEngine(filename, documentPath)
+                data = creditScrape.extractEngine(filename, filenameData, documentPath)
                 allData = pd.concat([allData, data], ignore_index=True)
+                ## TESTS
+                print(len(data))
+                print(data)
             else:
                 print("Error: \"{}\" is not a recognized account type (i.e., checking, amex, mastercard, or visa).".format(filename))
         
