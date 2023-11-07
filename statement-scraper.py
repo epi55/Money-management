@@ -3,8 +3,8 @@ import os
 import re
 import nltk
 from nltk.corpus import stopwords
-import pandas as pd
 import numpy as np
+import pandas as pd
 from openpyxl.workbook import Workbook
 #from sklearn.feature_extraction.text import CountVectorizer
 #from sklearn.naive_bayes import MultinomialNB
@@ -41,15 +41,6 @@ def extractEngine(filename, documentPath):
                 df.at[index, 'date'] = date.strftime('%Y-%m-%d')
                 new_date = date.strftime('%B %d, %Y') # Recent add
                 df.insert(1, 'new_date', new_date) # Recent add
-
-    '''def cleanAmounts(df):
-        for index, row in df.itterrows():
-            amount = pd.to_numeric(row['debit'], errors='coerce')
-            if not pd.isna(amount):
-                df.at[index, 'debit'].replace('$', '').float()
-            amount = pd.to_numeric(row['credit'], errors='coerce')
-            if not pd.isna(amount):
-                df.at[index, 'credit'].replace('$', '').float()'''
 
     def filenameToCols(filenameData):
         df['person'] = filenameData[0][0]
