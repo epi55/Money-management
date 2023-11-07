@@ -11,8 +11,11 @@ import creditScrape
 
 # ENGINES
 def runEngine():
-    statementFolder = r"Money management\Scraper\Statements"
-    outputFolder = r"Money management\Scraper\Outputs"
+    #statementFolder = r"Money management\Scraper\Statements"
+    #outputFolder = r"Money management\Scraper\Outputs"
+
+    statementFolder = pathlib.Path('Money management') / 'Scraper' / 'Statements'
+    outputFolder = pathlib.Path('Money management') / 'Scraper' / 'Outputs'
     
     allData = pd.DataFrame(columns=['date1', 'date2', 'vendor', 'debit', 'credit', 'bank', 'account', 'category1', 'category2', 'person'])
 
