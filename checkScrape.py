@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 from openpyxl.workbook import Workbook
 # NOTE: allData = pd.DataFrame(columns=['date1', 'date2', 'vendor', 'debit', 'credit', 'bank', 'account', 'category1', 'category2', 'person'])
 
@@ -59,22 +59,15 @@ def cleanStructure(df, filenameData):
 
     dropEmptyRows(df)
 
+    '''    if pd.isna(df['date1']):
+        df['vendor'] = df['vendor'] + ' ' + df['vendor_shifted']'''
+
 def dropEmptyRows(df):
-    def concat_strings(x):
-        return ' '.join(x)
-    df = df.groupby(['date1', 'date2', 'debit', 'credit', 'bank', 'account', 'person'])['vendor'].agg(concat_strings).reset_index()
-    # NOTE: groupby code above, I removed 'category1' and 'category2'
-    df = df.dropna(subset=['date1'], inplace=True)
+    df['vendor_shifted'] = df['vendor'].shift(-1)
+    
+    df['vendor'] = df.apply(lambda x: df['vendor'].str.cat(df['vendor_shifted'], sep=' ') if pd.isna(x['date1']) else x['vendor'], axis=1)
 
-'''def dropEmptyRows(df):
-    for index, row in df.iterrows():
-        if index != 0 or index != len(df):
-            if row['date1'] is None or '':
-                vendorDesc = df.iloc[index-1]['vendor'] + ' ' + df.iloc[index]['vendor']
-                df.iloc[index-1]['vendor'] = vendorDesc'''
+    #df['vendor'] = df['vendor'].str.cat(df['vendor_shifted'], sep=' ')
 
-'''    df['credit'] = df['debit'].apply(migrateCredits)
-    df['debit'] = df['debit'].apply(abs)
-    for index, row in df.iterrows():s
-        if row['debit'] == row['credit']:
-            df.at[index, 'debit'] = float('nan')'''
+    df.dropna(subset=['date1'], inplace=True)
+    df.drop(columns=['vendor_shifted'], inplace=True)
