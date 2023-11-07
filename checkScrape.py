@@ -36,6 +36,8 @@ def cleanAmounts(df):
                 amount = float(row['credit'].replace('$', '').replace(',', ''))
             df.at[index, 'credit'] = amount
 
+    df['debit'] = df['debit'].apply(abs)
+
 def cleanDates(df):
     for index, row in df.iterrows():
         date = pd.to_datetime(row['date1'], format='%d-%b-%y', errors='coerce') # ORIGINAL: format='%m/%d/%y'
@@ -59,15 +61,16 @@ def cleanStructure(df, filenameData):
 
     dropEmptyRows(df)
 
-    '''    if pd.isna(df['date1']):
-        df['vendor'] = df['vendor'] + ' ' + df['vendor_shifted']'''
-
+# NOTE: dropEmptyRows is a WIP; can't get code to concatenate vendor descriptions on multi-line entries
 def dropEmptyRows(df):
     df['vendor_shifted'] = df['vendor'].shift(-1)
     
     df['vendor'] = df.apply(lambda x: df['vendor'].str.cat(df['vendor_shifted'], sep=' ') if pd.isna(x['date1']) else x['vendor'], axis=1)
 
     #df['vendor'] = df['vendor'].str.cat(df['vendor_shifted'], sep=' ')
+
+    '''    if pd.isna(df['date1']):
+        df['vendor'] = df['vendor'] + ' ' + df['vendor_shifted']'''
 
     df.dropna(subset=['date1'], inplace=True)
     df.drop(columns=['vendor_shifted'], inplace=True)
