@@ -8,6 +8,7 @@ import pandas as pd
 from openpyxl.workbook import Workbook
 import checkScrape
 import creditScrape
+import pathLib
 
 # ENGINES
 def runEngine():
