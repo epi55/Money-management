@@ -8,13 +8,10 @@ import pandas as pd
 from openpyxl.workbook import Workbook
 import checkScrape
 import creditScrape
-import pathLib
+import pathlib
 
 # ENGINES
 def runEngine():
-    #statementFolder = r"Money management\Scraper\Statements"
-    #outputFolder = r"Money management\Scraper\Outputs"
-
     statementFolder = pathlib.Path('Money management') / 'Scraper' / 'Statements'
     outputFolder = pathlib.Path('Money management') / 'Scraper' / 'Outputs'
     
@@ -22,13 +19,18 @@ def runEngine():
 
     for filename in os.listdir(statementFolder):
         documentPath = os.path.join(statementFolder, filename)
-        filenameData = re.findall(r"([^-]+) - ([^-]+) - ([^-]+) - ([^.]+)", filename)
+        filenameData = re.findall(r'([^-]+) - ([^-]+) - ([^-]+) - ([^-]+)(- [^-]+)?', filename)
+        print(filename) # Print the filename
+        print(filenameData) # Print the filenameData list
+        # NOTE: The findall throws an error if there:
+        # are less than five segments now; it used to be 4; the '?' doesn't help;
+        # case sensitivities (i.e. '.CSV' will not be parsed but '.csv' will; 'filename.lower()' doesn't help)
 
         if os.path.splitext(documentPath)[1] == '.csv':
             if filenameData[0][2] == 'checking':
                 data = checkScrape.extractEngine(filename, filenameData, documentPath)
                 allData = pd.concat([allData, data], ignore_index=True)
-            elif 'amex' or 'mastercard' or 'visa' in filenameData[0][2]: 
+            elif 'amex' or 'mastercard' or 'visa' in filenameData[0][2]:
                 data = creditScrape.extractEngine(filename, filenameData, documentPath)
                 allData = pd.concat([allData, data], ignore_index=True)
             else:
@@ -42,12 +44,12 @@ def runEngine():
 
 def outputEngine(allData, outputFolder, outputChoice):
     if outputChoice == '1':
-        outputPath = os.path.join(outputFolder, "output_data.csv")
+        outputPath = os.path.join(outputFolder, 'output_data.csv')
         allData.to_csv(outputPath, index=False)
         print("Data saved to:", outputPath)
 
     if outputChoice == '2':
-        outputPath = os.path.join(outputFolder, "output_data.xlsx")
+        outputPath = os.path.join(outputFolder, 'output_data.xlsx')
         allData.to_excel(outputPath, index=False)
         print("Data saved to:", outputPath)
 

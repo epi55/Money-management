@@ -1,48 +1,89 @@
 import numpy as np
 import pandas as pd
-from openpyxl.workbook import Workbook
 # NOTE: allData = pd.DataFrame(columns=['date1', 'date2', 'vendor', 'debit', 'credit', 'bank', 'account', 'category1', 'category2', 'person'])
 
 def extractEngine(filename, filenameData, documentPath):
     if filenameData[0][1] == 'rbc':
-        df = pd.read_csv(documentPath, skiprows=1, header=None, names=['date1', 'vendor', 'debit', 'credit', 'balance', 'drop1'])
-    else:
-        print("Error: \"{}\" is not from a recognized bank (i.e. RBC) and will not be processed.".format(filename))
+        # COL headers provided in CSV
+        df = pd.read_csv(documentPath, skiprows=1, header=None, names=['date1', 'vendor', 'debit', 'credit', 'drop1', 'drop2'])
+        df.drop(columns=['drop1', 'drop2'], inplace=True)
     
-    cleanDataTypes(df)
-    cleanDates(df)
+    elif filenameData[0][1] == 'eq':
+        # COL headers provided in CSV
+        df = pd.read_csv(documentPath, skiprows=1, header=None, names=['date1', 'vendor', 'debit', 'drop1'])
+        df.drop(columns=['drop1'], inplace=True)
+
+    elif filenameData[0][1] == 'tangerine':
+        # COL headers provided in CSV
+        df = pd.read_csv(documentPath, skiprows=1, header=None, names=['date1', 'drop1', 'vendor', 'drop2', 'debit'])
+        df.drop(columns=['drop1', 'drop2'], inplace=True)
+
+    else:
+        print("Error: \"{}\" is not from a recognized bank (i.e. RBC, EQ, or Tangerine) and will not be processed.".format(filename))
+    
+    cleanDataTypes(df, filenameData)
+    cleanDates(df, filenameData)
     cleanStructure(df, filenameData)
 
     return df
     
-def cleanDataTypes(df):
+def cleanDataTypes(df, filenameData):
     df['vendor'] = df['vendor'].astype('string')
 
-    cleanAmounts(df)
+    cleanAmounts(df, filenameData)
 
-def cleanAmounts(df):
+def cleanAmounts(df, filenameData):
     for index, row in df.iterrows():
         if row['debit'] is not None and row['debit'] != '':
             if type(row['debit']) == float:
                 amount = row['debit']
             elif type(row['debit']) == str:
                 amount = float(row['debit'].replace('$', '').replace(',', ''))
-            df.at[index, 'debit'] = amount
+            df.at[index, 'debit'] = amount # NOTE: Could this be how to concat 'vendor' and 'vendorShifted'?
+        
+        if filenameData[0][1] == 'rbc':
+            if row['credit'] is not None and row['credit'] != '':
+                if type(row['credit']) == float:
+                    amount = row['credit']
+                elif type(row['credit']) == str:
+                    amount = float(row['credit'].replace('$', '').replace(',', ''))
+                df.at[index, 'credit'] = amount # NOTE: Could this be how to concat 'vendor' and 'vendorShifted'?
 
-        if row['credit'] is not None and row['credit'] != '':
-            if type(row['credit']) == float:
-                amount = row['credit']
-            elif type(row['credit']) == str:
-                amount = float(row['credit'].replace('$', '').replace(',', ''))
-            df.at[index, 'credit'] = amount
-
+    # 'credit' is created from 'debit' if values are greater than 0
+    # 'debit' values are made positive
+    # 'debit' value is replaced by 'nan' if duplicated in the 'credit' column
+    if filenameData[0][1] == 'eq' or filenameData[0][1] == 'tangerine':
+        df['credit'] = df['debit'].apply(migrateCredits)
+    
     df['debit'] = df['debit'].apply(abs)
-
-def cleanDates(df):
     for index, row in df.iterrows():
-        date = pd.to_datetime(row['date1'], format='%d-%b-%y', errors='coerce') # ORIGINAL: format='%m/%d/%y'
-        if not pd.isna(date):
-            df.at[index, 'date1'] = date.strftime('%Y-%m-%d')
+        if row['debit'] == row['credit']:
+            df.at[index, 'debit'] = float('nan')
+
+def migrateCredits(credit):
+    return credit if credit > 0 else None
+
+def cleanDates(df, filenameData):
+    # RBC / DD-Mon-YY = %d-%b-%y
+    if filenameData[0][1] == 'rbc':
+        for index, row in df.iterrows():
+            date = pd.to_datetime(row['date1'], format='%d-%b-%y', errors='coerce')
+            if not pd.isna(date):
+                df.at[index, 'date1'] = date.strftime('%Y-%m-%d')
+
+    # EQ / DD Mon YYYY = %d %b %Y
+    if filenameData[0][1] == 'eq':
+        for index, row in df.iterrows():
+            date = pd.to_datetime(row['date1'], format='%d %b %Y', errors='coerce')
+            if not pd.isna(date):
+                df.at[index, 'date1'] = date.strftime('%Y-%m-%d')
+
+    # TANGERINE / MM/DD/YYYY = %m/%d/%Y - NOTE: day of the month is not zero padded
+    if filenameData[0][1] == 'tangerine':
+        for index, row in df.iterrows():
+            date = pd.to_datetime(row['date1'], format='%m/%d/%Y', errors='coerce')
+            if not pd.isna(date):
+                df.at[index, 'date1'] = date.strftime('%Y-%m-%d')
     
     addNewDateColumn(df)
 
@@ -57,20 +98,37 @@ def cleanStructure(df, filenameData):
     df['person'] = filenameData[0][0]
     df['bank'] = filenameData[0][1]
     df['account'] = filenameData[0][2]
-    df.drop(columns=['drop1', 'balance'], inplace=True)
-
-    dropEmptyRows(df)
-
-# NOTE: dropEmptyRows is a WIP; can't get code to concatenate vendor descriptions on multi-line entries
-def dropEmptyRows(df):
-    df['vendor_shifted'] = df['vendor'].shift(-1)
     
-    df['vendor'] = df.apply(lambda x: df['vendor'].str.cat(df['vendor_shifted'], sep=' ') if pd.isna(x['date1']) else x['vendor'], axis=1)
+    if filenameData[0][1] == 'rbc':
+        dropEmptyRows(df)
 
-    #df['vendor'] = df['vendor'].str.cat(df['vendor_shifted'], sep=' ')
+# NOTE: dropEmptyRows is a WIP; can't get code to concat vendor descriptions on multi-line entries
 
-    '''    if pd.isna(df['date1']):
-        df['vendor'] = df['vendor'] + ' ' + df['vendor_shifted']'''
+def dropEmptyRows(df):
+    df['vendorShifted'] = df['vendor'].shift(-1).fillna('')
+    for index, row in df.iterrows():
+        if index < len(df) - 1 and pd.isna(df.at[index + 1, 'date1']):
+            vendorDesc = df.at[index, 'vendor'] + ' ' + df.at[index, 'vendorShifted']
+            df.at[index, 'vendor'] = vendorDesc
+    df.dropna(subset=['date1'], inplace=True)
+    df.drop(columns=['vendorShifted'], inplace=True)
+'''
+    df['vendorShifted'] = df['vendor'].shift(-1).fillna('')
+    for index, row in df.iterrows():
+        if df.at[index + 1, 'date1'].isna():
+            vendorDesc = df.at[index, 'vendor'] + ' ' + df.at[index, 'vendorShifted']
+            df.at[index, 'vendor'] = vendorDesc
+    df.dropna(subset=['date1'], inplace=True)
+    df.drop(columns=['vendorShifted'], inplace=True)
+'''
+
+'''
+def dropEmptyRows(df):
+    df['vendorShifted'] = df['vendor'].shift(-1)
+    for index, row in df.iterrows():
+        vendorDesc = df.at[index, 'vendor'] + ' ' + df.at[index, 'vendorShifted']
+        df.at[index, 'vendor'] = vendorDesc
 
     df.dropna(subset=['date1'], inplace=True)
-    df.drop(columns=['vendor_shifted'], inplace=True)
+    df.drop(columns=['vendorShifted'], inplace=True)
+'''
