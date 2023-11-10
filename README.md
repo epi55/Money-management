@@ -15,4 +15,4 @@ Script parses credit card and checking acount statements from select banks.
 ## COMPLETED
 * Added function to rename documents after they're processed. (2023/11/10)
 * Added conditional statement to skip document if it's been processed (via token in changed name). (2023/11/10)
-* Created a script (reverseNameChange.py) to support development testing; script modifies file names, if code errors occur.
+* Created a script (reverseNameChange.py) to support development testing; script modifies file names, if code errors occur. (2023/11/10)
