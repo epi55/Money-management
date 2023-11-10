@@ -9,6 +9,7 @@ from openpyxl.workbook import Workbook
 import checkScrape
 import creditScrape
 import pathlib
+import datetime
 
 # ENGINES
 def runEngine():
@@ -20,27 +21,37 @@ def runEngine():
     for filename in os.listdir(statementFolder):
         documentPath = os.path.join(statementFolder, filename)
         filenameData = re.findall(r'([^-]+) - ([^-]+) - ([^-]+) - ([^-]+)(- [^-]+)?', filename)
-        print(filename) # Print the filename
-        print(filenameData) # Print the filenameData list
-        # NOTE: The findall throws an error if there:
-        # are less than five segments now; it used to be 4; the '?' doesn't help;
-        # case sensitivities (i.e. '.CSV' will not be parsed but '.csv' will; 'filename.lower()' doesn't help)
+        processedToken = "- prc YYYY-MM-DD"
 
-        if os.path.splitext(documentPath)[1] == '.csv':
-            if filenameData[0][2] == 'checking':
-                data = checkScrape.extractEngine(filename, filenameData, documentPath)
-                allData = pd.concat([allData, data], ignore_index=True)
-            elif 'amex' or 'mastercard' or 'visa' in filenameData[0][2]:
-                data = creditScrape.extractEngine(filename, filenameData, documentPath)
-                allData = pd.concat([allData, data], ignore_index=True)
-            else:
-                print("Error: \"{}\" is not a recognized account type (i.e., checking, amex, mastercard, or visa).".format(filename))
-        
+        if filename[-20:-4].startswith('- prc'):
+            continue
         else:
-            print("Error: \"{}\" is not a CSV file and will not be processed.".format(filename))
+            if os.path.splitext(documentPath)[1] == '.csv':
+                if filenameData[0][2] == 'checking':
+                    data = checkScrape.extractEngine(filename, filenameData, documentPath)
+                    allData = pd.concat([allData, data], ignore_index=True)
+                elif 'amex' or 'mastercard' or 'visa' in filenameData[0][2]:
+                    data = creditScrape.extractEngine(filename, filenameData, documentPath)
+                    allData = pd.concat([allData, data], ignore_index=True)
+                else:
+                    print("Error: \"{}\" is not a recognized account type (i.e., checking, amex, mastercard, or visa).".format(filename))
+                
+                nameChange(documentPath)
+            
+            else:
+                print("Error: \"{}\" is not a CSV file and will not be processed.".format(filename))
 
     outputChoice = input("## '1' for CSV ## '2' for EXCEL: ")
     outputEngine(allData, outputFolder, outputChoice)
+
+def nameChange(documentPath):
+    currentDate = datetime.datetime.now()
+    dateStr = currentDate.strftime("%Y-%m-%d")
+    
+    oldFilename = documentPath
+    filenameWithoutExtension = os.path.splitext(oldFilename)[0]
+    newFilename = "{} - prc {}.csv".format(filenameWithoutExtension, dateStr)
+    os.rename(oldFilename, newFilename)
 
 def outputEngine(allData, outputFolder, outputChoice):
     if outputChoice == '1':
