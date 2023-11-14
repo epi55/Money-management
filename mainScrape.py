@@ -56,13 +56,29 @@ def nameChange(documentPath):
 def outputEngine(allData, outputFolder, outputChoice):
     if outputChoice == '1':
         outputPath = os.path.join(outputFolder, 'output_data.csv')
-        allData.to_csv(outputPath, index=False)
+
+        if os.path.exists(outputPath):
+            dfExisting = pd.read_csv(outputPath)
+            df = pd.concat([allData, dfExisting])
+            df = df.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'])
+            df.csv(outputPath, index=False)
+        else:
+            allData.to_csv(outputPath, index=False)
+
         print("Data saved to:", outputPath)
 
     if outputChoice == '2':
         outputPath = os.path.join(outputFolder, 'output_data.xlsx')
-        allData.to_excel(outputPath, index=False)
-        print("Data saved to:", outputPath)
+
+        if os.path.exists(outputPath):
+            dfExisting = pd.read_excel(outputPath)
+            df = pd.concat([allData, dfExisting])
+            df = df.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'])
+            df.to_excel(outputPath, index=False)
+        else:
+            allData.to_excel(outputPath, index=False)
+
+        print("Data saved to: {}".format(outputPath))
 
 # RUN
 runEngine()
