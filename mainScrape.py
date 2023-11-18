@@ -5,7 +5,9 @@ import nltk
 from nltk.corpus import stopwords
 import numpy as np
 import pandas as pd
+import openpyxl
 from openpyxl.workbook import Workbook
+from openpyxl import load_workbook
 import checkScrape
 import creditScrape
 import pathlib
@@ -71,14 +73,27 @@ def outputEngine(allData, outputFolder, outputChoice):
         outputPath = os.path.join(outputFolder, 'output_data.xlsx')
 
         if os.path.exists(outputPath):
-            dfExisting = pd.read_excel(outputPath)
-            df = pd.concat([allData, dfExisting])
-            df = df.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'])
-            df.to_excel(outputPath, index=False)
+            with pd.ExcelWriter(outputPath, engine='openpyxl', mode='a') as writer:
+                book = load_workbook(outputPath)
+                writer.book = book
+                writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+                dfExisting = pd.read_excel(outputPath)
+                df = pd.concat([allData, dfExisting])
+                df = df.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'])
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
         else:
             allData.to_excel(outputPath, index=False)
 
         print("Data saved to: {}".format(outputPath))
+
+'''        if os.path.exists(outputPath):
+        dfExisting = pd.read_excel(outputPath)
+        df = pd.concat([allData, dfExisting])
+        df = df.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'])
+        df.to_excel(outputPath, index=False)
+    else:
+        allData.to_excel(outputPath, index=False)
+'''
 
 # RUN
 runEngine()
