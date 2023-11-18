@@ -73,6 +73,17 @@ def outputEngine(allData, outputFolder, outputChoice):
         outputPath = os.path.join(outputFolder, 'output_data.xlsx')
 
         if os.path.exists(outputPath):
+            with pd.ExcelWriter(outputPath, mode='a', if_sheet_exists='overlay') as writer:
+                dfExisting = pd.read_excel(outputPath, sheet_name='Sheet1')
+                df = pd.concat([allData, dfExisting])
+                df = df.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'])
+                df.to_excel(writer, sheet_name='Sheet1', index=False, startrow=len(dfExisting)+1)
+        else:
+            allData.to_excel(outputPath, index=False)
+        
+        print("Data saved to: {}".format(outputPath))
+
+'''        if os.path.exists(outputPath):
             with pd.ExcelWriter(outputPath, engine='openpyxl', mode='a') as writer:
                 book = load_workbook(outputPath)
                 writer.book = book
@@ -83,8 +94,7 @@ def outputEngine(allData, outputFolder, outputChoice):
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
         else:
             allData.to_excel(outputPath, index=False)
-
-        print("Data saved to: {}".format(outputPath))
+'''
 
 '''        if os.path.exists(outputPath):
         dfExisting = pd.read_excel(outputPath)
