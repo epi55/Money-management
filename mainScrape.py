@@ -38,7 +38,7 @@ def runEngine():
                 else:
                     print("Error: \"{}\" is not a recognized account type (i.e., checking, amex, mastercard, or visa).".format(filename))
                 
-                nameChange(documentPath)
+                # nameChange(documentPath) ## REMOVED FOR TESTING
             
             else:
                 print("Error: \"{}\" is not a CSV file and will not be processed.".format(filename))
@@ -55,17 +55,17 @@ def nameChange(documentPath):
     newFilename = "{} - prc {}.csv".format(filenameWithoutExtension, dateStr)
     os.rename(oldFilename, newFilename)
 
-def outputEngine(allData, outputFolder, outputChoice):
+def outputEngine(dfScraped, outputFolder, outputChoice):
     if outputChoice == '1':
         outputPath = os.path.join(outputFolder, 'output_data.csv')
 
         if os.path.exists(outputPath):
-            dfExisting = pd.read_csv(outputPath)
-            df = pd.concat([allData, dfExisting])
+            dfCSV = pd.read_csv(outputPath)
+            df = pd.concat([dfScraped, dfCSV])
             df = df.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'])
             df.csv(outputPath, index=False)
         else:
-            allData.to_csv(outputPath, index=False)
+            dfScraped.to_csv(outputPath, index=False)
 
         print("Data saved to:", outputPath)
 
@@ -74,36 +74,15 @@ def outputEngine(allData, outputFolder, outputChoice):
 
         if os.path.exists(outputPath):
             with pd.ExcelWriter(outputPath, mode='a', if_sheet_exists='overlay') as writer:
-                dfExisting = pd.read_excel(outputPath, sheet_name='Sheet1')
-                df = pd.concat([allData, dfExisting])
-                df = df.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'])
-                df.to_excel(writer, sheet_name='Sheet1', index=False, startrow=len(dfExisting)+1)
+                dfExcel = pd.read_excel(outputPath, sheet_name='Sheet1')
+                dfCombined = pd.concat([dfExcel, dfScraped])
+                dfUnique = dfCombined.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'], keep='first')
+                dfUnique.to_excel(writer, sheet_name='Sheet1', index=False)
+
         else:
-            allData.to_excel(outputPath, index=False)
-        
+            dfScraped.to_excel(outputPath, index=False)
+       
         print("Data saved to: {}".format(outputPath))
-
-'''        if os.path.exists(outputPath):
-            with pd.ExcelWriter(outputPath, engine='openpyxl', mode='a') as writer:
-                book = load_workbook(outputPath)
-                writer.book = book
-                writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
-                dfExisting = pd.read_excel(outputPath)
-                df = pd.concat([allData, dfExisting])
-                df = df.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'])
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
-        else:
-            allData.to_excel(outputPath, index=False)
-'''
-
-'''        if os.path.exists(outputPath):
-        dfExisting = pd.read_excel(outputPath)
-        df = pd.concat([allData, dfExisting])
-        df = df.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'])
-        df.to_excel(outputPath, index=False)
-    else:
-        allData.to_excel(outputPath, index=False)
-'''
 
 # RUN
 runEngine()
