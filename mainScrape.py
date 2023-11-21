@@ -56,6 +56,35 @@ def nameChange(documentPath):
     os.rename(oldFilename, newFilename)
 
 def outputEngine(dfScraped, outputFolder, outputChoice):
+    outputPath = os.path.join(outputFolder, 'output_data.xlsx')
+
+    if os.path.exists(outputPath):
+        with pd.ExcelWriter(outputPath, mode='a', if_sheet_exists='overlay') as writer:
+            dfExcel = pd.read_excel(outputPath, sheet_name='Sheet1')
+            dfCombined = pd.concat([dfExcel, dfScraped])
+            dfUnique = dfCombined.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'], keep='first')
+            dfUnique.to_excel(writer, sheet_name='Sheet1', index=False)
+            print("(Scraped and extract) Data saved as Excel to:", outputPath)
+            if outputChoice == '1':
+                outputPath = os.path.join(outputFolder, 'output_data.csv')
+                dfUnique.to_csv(outputPath, index=False)
+                print("(Scraped and extract) Data saved as CSV to:", outputPath)
+
+    else:
+        dfScraped.to_excel(outputPath, index=False)
+        print("(Scraped only) Data saved as Excel to:", outputPath)
+        if outputChoice == '1':
+            outputPath = os.path.join(outputFolder, 'output_data.csv')
+            dfScraped.to_csv(outputPath, index=False)
+            print("(Scraped only) Data saved as CSV to:", outputPath)
+
+# RUN
+runEngine()
+
+## HOLD
+'''
+def outputEngine(dfScraped, outputFolder, outputChoice):
+    
     if outputChoice == '1':
         outputPath = os.path.join(outputFolder, 'output_data.csv')
 
@@ -83,6 +112,4 @@ def outputEngine(dfScraped, outputFolder, outputChoice):
             dfScraped.to_excel(outputPath, index=False)
        
         print("Data saved to: {}".format(outputPath))
-
-# RUN
-runEngine()
+'''
