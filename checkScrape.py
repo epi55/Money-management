@@ -100,10 +100,11 @@ def cleanStructure(df, filenameData):
     df['account'] = filenameData[0][2]
     
     # Unique for RBC; bank doesn't provide an date-expanded CSV / requires website copy+paste
+    # NOTE: MAY NOT BE NEEDED FOR OTHER RBC CSV!!! WAS FOR DATE-EXPANDED CSVs, NOT SHORT 
     if filenameData[0][1] == 'rbc':
         dropEmptyRows(df)
 
-def dropEmptyRows(df):
+def dropEmptyRows(df, referenceFolder):
     df['vendorShifted'] = df['vendor'].shift(-1).fillna('')
     for index, row in df.iterrows():
         if index < len(df) - 1 and pd.isna(df.at[index + 1, 'date1']):
