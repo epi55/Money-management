@@ -5,9 +5,9 @@ Script parses credit card and checking acount statements from select banks.
 
 ## CURRENT
 * Focus: Script needs to update a persistent database instead of creating a new one on each run, adding new entries into the database while ignoring duplicates. (Excel and CSV outputs completed; debugging.)
+* Create a lookup dictionary to populate recurring cost categories (e.g. groceries).
 
 ## FUTURE
-* Create a lookup dictionary to populate recurring cost categories (e.g. groceries).
 * Design and develop automated biweekly Excel spreadsheet; instead of manual entry every two weeks, relevant data will be extracted from inputs (e.g. pay stub, credit and checking statements), processed, calculated, and presented in a dashboard similar to existing manual Excel.
 * NLP for cost categories.
 * Saving and investment data extraction and analysis.
