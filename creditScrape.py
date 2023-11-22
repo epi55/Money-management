@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-# NOTE: allData = pd.DataFrame(columns=['date1', 'date2', 'vendor', 'debit', 'credit', 'bank', 'account', 'category1', 'category2', 'person'])
+# NOTE: allData = pd.DataFrame(columns=['date1', 'date2', 'vendor', 'debit', 'credit', 'bank', 'account', 'categoryAuto', 'categoryManual', 'person'])
 
 def extractEngine(filename, filenameData, documentPath):
     if filenameData[0][1] == 'cibc':

@@ -19,7 +19,7 @@ def runEngine():
     outputFolder = pathlib.Path('Money management') / 'Scraper' / 'Outputs'
     referenceFolder = pathlib.Path('Money management') / 'Scraper' / 'Reference'
     
-    allData = pd.DataFrame(columns=['date1', 'date2', 'vendor', 'debit', 'credit', 'bank', 'account', 'category1', 'category2', 'person'])
+    allData = pd.DataFrame(columns=['date1', 'date2', 'vendor', 'debit', 'credit', 'bank', 'account', 'categoryAuto', 'categoryManual', 'person'])
 
     for filename in os.listdir(statementFolder):
         documentPath = os.path.join(statementFolder, filename)
@@ -64,6 +64,14 @@ def outputEngine(dfScraped, outputFolder, outputChoice):
             dfExcel = pd.read_excel(outputPath, sheet_name='Sheet1')
             dfCombined = pd.concat([dfExcel, dfScraped])
             dfUnique = dfCombined.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'], keep='first')
+
+            categoryChoice = None
+            while categoryChoice not in ['Y', 'N']:
+                categoryChoice = input("Do you want to automatically categorize new entries? Y/N")
+            
+            if categoryChoice == 'Y':
+                dfUnique = categoryLookUp.checkEngine(dfUnique, referenceFolder)
+
             dfUnique.to_excel(writer, sheet_name='Sheet1', index=False)
             print("(Scraped and extract) Data saved as Excel to:", outputPath)
             if outputChoice == '1':
@@ -72,6 +80,13 @@ def outputEngine(dfScraped, outputFolder, outputChoice):
                 print("(Scraped and extract) Data saved as CSV to:", outputPath)
 
     else:
+        categoryChoice = None
+        while categoryChoice not in ['Y', 'N']:
+            categoryChoice = input("Do you want to automatically categorize new entries? Y/N")
+
+        if categoryChoice == 'Y':
+            dfScraped = categoryLookUp.checkEngine(dfScraped, referenceFolder)
+        
         dfScraped.to_excel(outputPath, index=False)
         print("(Scraped only) Data saved as Excel to:", outputPath)
         if outputChoice == '1':

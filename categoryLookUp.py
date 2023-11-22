@@ -3,36 +3,53 @@
 
 import pandas as pd
 
-# load df, iterate through rows (inefficient) to find empty category columns
-# prep for vendor lookup in categoryLookUp
-def checkCategories(df, referenceFolder):
+# NOTE / TODO : iterrows is inefficient; how can performance be improved?
+def checkEngine(df, referenceFolder):
     for index, row in df.iterrows():
-        if pd.isna(df.at[index, 'category1']): # NOTE: Can update category1, category2 names => "categoryAuto", "categoryManual"
+        if pd.isna(df.at[index, 'categoryAuto']):
             vendorPreClean = df.at[index, 'vendor']
             vendorPostClean = re.sub(r'[^a-zA-Z]', '', vendorPreClean)
-            df.at[index, 'category1'] = vendorLookUp(vendorPostClean, referenceFolder)
+            df.at[index, 'categoryAuto'] = vendorLookUp(vendorPostClean, referenceFolder)
 
 def vendorLookUp(vendorPostClean, referenceFolder):
     referencePath = os.path.join(referenceFolder, 'categoryLookUp.csv')
     dfLookUp = pd.read_csv(referencePath)
+    
+    # NOTE / TODO : This may return multiple categories; how do we handle this?
     if dfLookUp.isin([vendorPostClean]).any().any():
         return list(df.columns[df.isin([vendorPostClean]).any()])
     else:
         existingCategories = list(dfLookUp.columns)
         categoryChoice = input("{} not found in Look Up Tables. The available categories are: {}. Would you like to (1) create a new category or (2) add to an existing category?".format(vendorPostClean, existingCategories))
+        
         if categoryChoice == '1':
-            # CREATE CATEGORY
-            newCategoryName = input("What is the new category?")
+            while True:
+                newCategoryName = input("What is the new category?")
+                if newCategoryName in existingCategories:
+                    print("Cateogry already exists. Please enter a new category name.")
+                else:
+                    confirmCategoryName = input("Please enter the category name again to confirm: ")
+                    if confirmCategoryName == newCategoryName:
+                        break
+                    else:
+                        print("Category names do not match. Please try again.")
+
             dfLookUp = dfLookUp.assign(newCategoryName=[vendorPostClean])
             df.to_csv(referencePath, index=False)
-            print("New category added: \"{}\". \"{}\" added to category as a vendor.".format(newCategoryName, vendorPostClean))
+            print("New category added: \"{}\". \"{}\" assigned to category.".format(newCategoryName, vendorPostClean))
+         
         if categoryChoice == '2':
             # ADD TO CATEGORY
-            existingCategoryName = input("What category do you want to add the vendor to?")
-            print("Existing category amended: \"{}\". \"{}\" added to category as a vendor.".format(newCategoryName, vendorPostClean))
-
-
-# NOTE: Not sure how to handle the lookup. Dataframe might not be great, but could it be lists instead? Am I making it overly complicated? I want to use a csv file though.
+            while True:
+                existingCategoryName = input("What category should vendor be added to?")
+                if existingCategoryName in existingCategories:
+                    break
+                else:
+                    print("Invalid input. Please enter an existing category name.")
+            
+            index = dfLookUp[existingCategoryName].isnull().idxmax()
+            dfLookUp.loc[index, existingCategoryName] = vendorPostClean
+            print("Existing category amended: \"{}\". \"{}\" assigned to category.".format(existingCategoryName, vendorPostClean))
 
 # Check category column
 #
