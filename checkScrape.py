@@ -39,7 +39,7 @@ def cleanAmounts(df, filenameData):
                 amount = row['debit']
             elif type(row['debit']) == str:
                 amount = float(row['debit'].replace('$', '').replace(',', ''))
-            df.at[index, 'debit'] = amount # NOTE: Could this be how to concat 'vendor' and 'vendorShifted'?
+            df.at[index, 'debit'] = amount
         
         if filenameData[0][1] == 'rbc':
             if row['credit'] is not None and row['credit'] != '':
@@ -47,7 +47,7 @@ def cleanAmounts(df, filenameData):
                     amount = row['credit']
                 elif type(row['credit']) == str:
                     amount = float(row['credit'].replace('$', '').replace(',', ''))
-                df.at[index, 'credit'] = amount # NOTE: Could this be how to concat 'vendor' and 'vendorShifted'?
+                df.at[index, 'credit'] = amount
 
     # 'credit' is created from 'debit' if values are greater than 0
     # 'debit' values are made positive
@@ -99,10 +99,9 @@ def cleanStructure(df, filenameData):
     df['bank'] = filenameData[0][1]
     df['account'] = filenameData[0][2]
     
+    # Unique for RBC; bank doesn't provide an date-expanded CSV / requires website copy+paste
     if filenameData[0][1] == 'rbc':
         dropEmptyRows(df)
-
-# NOTE: dropEmptyRows is a WIP; can't get code to concat vendor descriptions on multi-line entries
 
 def dropEmptyRows(df):
     df['vendorShifted'] = df['vendor'].shift(-1).fillna('')
@@ -112,23 +111,3 @@ def dropEmptyRows(df):
             df.at[index, 'vendor'] = vendorDesc
     df.dropna(subset=['date1'], inplace=True)
     df.drop(columns=['vendorShifted'], inplace=True)
-'''
-    df['vendorShifted'] = df['vendor'].shift(-1).fillna('')
-    for index, row in df.iterrows():
-        if df.at[index + 1, 'date1'].isna():
-            vendorDesc = df.at[index, 'vendor'] + ' ' + df.at[index, 'vendorShifted']
-            df.at[index, 'vendor'] = vendorDesc
-    df.dropna(subset=['date1'], inplace=True)
-    df.drop(columns=['vendorShifted'], inplace=True)
-'''
-
-'''
-def dropEmptyRows(df):
-    df['vendorShifted'] = df['vendor'].shift(-1)
-    for index, row in df.iterrows():
-        vendorDesc = df.at[index, 'vendor'] + ' ' + df.at[index, 'vendorShifted']
-        df.at[index, 'vendor'] = vendorDesc
-
-    df.dropna(subset=['date1'], inplace=True)
-    df.drop(columns=['vendorShifted'], inplace=True)
-'''
