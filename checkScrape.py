@@ -104,7 +104,7 @@ def cleanStructure(df, filenameData):
     if filenameData[0][1] == 'rbc':
         dropEmptyRows(df)
 
-def dropEmptyRows(df, referenceFolder):
+def dropEmptyRows(df):
     df['vendorShifted'] = df['vendor'].shift(-1).fillna('')
     for index, row in df.iterrows():
         if index < len(df) - 1 and pd.isna(df.at[index + 1, 'date1']):

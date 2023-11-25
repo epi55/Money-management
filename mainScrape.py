@@ -10,6 +10,7 @@ from openpyxl.workbook import Workbook
 from openpyxl import load_workbook
 import checkScrape
 import creditScrape
+import categoryLookUp
 import pathlib
 import datetime
 
@@ -45,7 +46,7 @@ def runEngine():
                 print("Error: \"{}\" is not a CSV file and will not be processed.".format(filename))
 
     outputChoice = input("## '1' for CSV ## '2' for EXCEL: ")
-    outputEngine(allData, outputFolder, outputChoice)
+    outputEngine(allData, outputFolder, outputChoice, referenceFolder)
 
 def nameChange(documentPath):
     currentDate = datetime.datetime.now()
@@ -56,7 +57,7 @@ def nameChange(documentPath):
     newFilename = "{} - prc {}.csv".format(filenameWithoutExtension, dateStr)
     os.rename(oldFilename, newFilename)
 
-def outputEngine(dfScraped, outputFolder, outputChoice):
+def outputEngine(dfScraped, outputFolder, outputChoice, referenceFolder):
     outputPath = os.path.join(outputFolder, 'output_data.xlsx')
 
     if os.path.exists(outputPath):
@@ -65,11 +66,11 @@ def outputEngine(dfScraped, outputFolder, outputChoice):
             dfCombined = pd.concat([dfExcel, dfScraped])
             dfUnique = dfCombined.drop_duplicates(subset=['date1', 'vendor', 'debit', 'credit', 'bank', 'account', 'person'], keep='first')
 
-            categoryChoice = None
-            while categoryChoice not in ['Y', 'N']:
-                categoryChoice = input("Do you want to automatically categorize new entries? Y/N")
+            categoryChoice = ''
+            while categoryChoice.lower() not in ['y', 'n']:
+                categoryChoice = input("\nDo you want to automatically categorize new entries? Y/N ")
             
-            if categoryChoice == 'Y':
+            if categoryChoice.lower() == 'y':
                 dfUnique = categoryLookUp.checkEngine(dfUnique, referenceFolder)
 
             dfUnique.to_excel(writer, sheet_name='Sheet1', index=False)
@@ -80,11 +81,11 @@ def outputEngine(dfScraped, outputFolder, outputChoice):
                 print("(Scraped and extract) Data saved as CSV to:", outputPath)
 
     else:
-        categoryChoice = None
-        while categoryChoice not in ['Y', 'N']:
-            categoryChoice = input("Do you want to automatically categorize new entries? Y/N")
+        categoryChoice = ''
+        while categoryChoice.lower() not in ['y', 'n']:
+            categoryChoice = input("\nDo you want to automatically categorize new entries? Y/N ")
 
-        if categoryChoice == 'Y':
+        if categoryChoice.lower() == 'y':
             dfScraped = categoryLookUp.checkEngine(dfScraped, referenceFolder)
         
         dfScraped.to_excel(outputPath, index=False)

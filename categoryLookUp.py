@@ -2,29 +2,32 @@
 # SEE: https://github.com/greggles/mcc-codes/blob/main/mcc_codes.csv
 
 import pandas as pd
+import re
+import os
 
 # NOTE / TODO : iterrows is inefficient; how can performance be improved?
 def checkEngine(df, referenceFolder):
     for index, row in df.iterrows():
         if pd.isna(df.at[index, 'categoryAuto']):
             vendorPreClean = df.at[index, 'vendor']
-            vendorPostClean = re.sub(r'[^a-zA-Z]', '', vendorPreClean)
+            vendorPostClean = re.sub(r'(?<=\w) +(?=\w)|(?<=\w) +$|^ +| +(?=\w)', '', vendorPreClean)
             df.at[index, 'categoryAuto'] = vendorLookUp(vendorPostClean, referenceFolder)
 
 def vendorLookUp(vendorPostClean, referenceFolder):
     referencePath = os.path.join(referenceFolder, 'categoryLookUp.csv')
     dfLookUp = pd.read_csv(referencePath)
+    print(dfLookUp)
     
-    # NOTE / TODO : This may return multiple categories; how do we handle this?
     if dfLookUp.isin([vendorPostClean]).any().any():
-        return list(df.columns[df.isin([vendorPostClean]).any()])
+        return list(dfLookUp.columns[dfLookUp.isin([vendorPostClean]).any()])
     else:
         existingCategories = list(dfLookUp.columns)
-        categoryChoice = input("{} not found in Look Up Tables. The available categories are: {}. Would you like to (1) create a new category or (2) add to an existing category?".format(vendorPostClean, existingCategories))
-        
+        categoryChoice = input("{} not found in Look Up Tables.\n\nThe available categories are: {}.\n\nWould you like to (1) create a new category or (2) add to an existing category? ".format(vendorPostClean, existingCategories))
+        newCategoryName = ''
+
         if categoryChoice == '1':
             while True:
-                newCategoryName = input("What is the new category?")
+                newCategoryName = input("What is the new category? ")
                 if newCategoryName in existingCategories:
                     print("Cateogry already exists. Please enter a new category name.")
                 else:
@@ -34,21 +37,24 @@ def vendorLookUp(vendorPostClean, referenceFolder):
                     else:
                         print("Category names do not match. Please try again.")
 
-            dfLookUp = dfLookUp.assign(newCategoryName=[vendorPostClean])
-            df.to_csv(referencePath, index=False)
+            dfLookUp = dfLookUp.assign(**{newCategoryName: vendorPostClean})
+            dfLookUp.to_csv(referencePath, index=False)
             print("New category added: \"{}\". \"{}\" assigned to category.".format(newCategoryName, vendorPostClean))
          
         if categoryChoice == '2':
-            # ADD TO CATEGORY
             while True:
-                existingCategoryName = input("What category should vendor be added to?")
+                existingCategoryName = input("What category should vendor be added to? ")
                 if existingCategoryName in existingCategories:
                     break
                 else:
-                    print("Invalid input. Please enter an existing category name.")
+                    print("Invalid input. Please enter an existing category name. ")
             
-            index = dfLookUp[existingCategoryName].isnull().idxmax()
-            dfLookUp.loc[index, existingCategoryName] = vendorPostClean
+            mask = dfLookUp[existingCategoryName].isna()
+            dfLookUp.loc[mask.idxmax(), existingCategoryName] = vendorPostClean
+            #dfLookUp.loc[dfLookUp[existingCategoryName].first_valid_index(), existingCategoryName] = vendorPostClean
+            #dfLookUp.at[(len(dfLookUp[existingCategoryName]) + 1), existingCategoryName] = vendorPostClean
+            dfLookUp.to_csv(referencePath, index=False)
+
             print("Existing category amended: \"{}\". \"{}\" assigned to category.".format(existingCategoryName, vendorPostClean))
 
 # Check category column
