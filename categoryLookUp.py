@@ -6,14 +6,15 @@ import re
 import os
 
 # NOTE / TODO : iterrows is inefficient; how can performance be improved?
-def checkEngine(df, referenceFolder):
+def lookUpEngine(df, referenceFolder):
     for index, row in df.iterrows():
         if pd.isna(df.at[index, 'categoryAuto']):
             vendorPreClean = df.at[index, 'vendor']
             vendorPostClean = re.sub(r'(?<=\w) +(?=\w)|(?<=\w) +$|^ +| +(?=\w)', '', vendorPreClean)
-            df.at[index, 'categoryAuto'] = vendorLookUp(vendorPostClean, referenceFolder)
+            df.at[index, 'categoryAuto'] = lookUpVendor(vendorPostClean, referenceFolder)
+    return df
 
-def vendorLookUp(vendorPostClean, referenceFolder):
+def lookUpVendor(vendorPostClean, referenceFolder):
     referencePath = os.path.join(referenceFolder, 'categoryLookUp.csv')
     dfLookUp = pd.read_csv(referencePath)
     print(dfLookUp)
@@ -25,10 +26,13 @@ def vendorLookUp(vendorPostClean, referenceFolder):
         categoryChoice = input("{} not found in Look Up Tables.\n\nThe available categories are: {}.\n\nWould you like to (1) create a new category or (2) add to an existing category? ".format(vendorPostClean, existingCategories))
         newCategoryName = ''
 
+        # TODO: Break with 'back'/quit
         if categoryChoice == '1':
             while True:
                 newCategoryName = input("What is the new category? ")
-                if newCategoryName in existingCategories:
+                if newCategoryName.lower == ('back'):
+                    break
+                elif newCategoryName in existingCategories:
                     print("Cateogry already exists. Please enter a new category name.")
                 else:
                     confirmCategoryName = input("Please enter the category name again to confirm: ")
@@ -41,10 +45,13 @@ def vendorLookUp(vendorPostClean, referenceFolder):
             dfLookUp.to_csv(referencePath, index=False)
             print("New category added: \"{}\". \"{}\" assigned to category.".format(newCategoryName, vendorPostClean))
          
+        # TODO: Break with 'back'/quit
         if categoryChoice == '2':
             while True:
                 existingCategoryName = input("What category should vendor be added to? ")
-                if existingCategoryName in existingCategories:
+                if existingCategoryName == ('back'):
+                    break
+                elif existingCategoryName in existingCategories:
                     break
                 else:
                     print("Invalid input. Please enter an existing category name. ")
@@ -56,6 +63,8 @@ def vendorLookUp(vendorPostClean, referenceFolder):
             dfLookUp.to_csv(referencePath, index=False)
 
             print("Existing category amended: \"{}\". \"{}\" assigned to category.".format(existingCategoryName, vendorPostClean))
+
+## NOTE: NEED TO RETURN AN UPDATED DATAFRAME BACK TO mainScrape.py
 
 # Check category column
 #

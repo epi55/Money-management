@@ -1,13 +1,13 @@
 # IMPORTS
 import os
 import re
-import nltk
-from nltk.corpus import stopwords
+# import nltk
+# from nltk.corpus import stopwords
 import numpy as np
 import pandas as pd
-import openpyxl
-from openpyxl.workbook import Workbook
-from openpyxl import load_workbook
+# import openpyxl
+# from openpyxl.workbook import Workbook
+# from openpyxl import load_workbook
 import checkScrape
 import creditScrape
 import categoryLookUp
@@ -16,16 +16,16 @@ import datetime
 
 # ENGINES
 def runEngine():
-    statementFolder = pathlib.Path('Money management') / 'Scraper' / 'Statements'
-    outputFolder = pathlib.Path('Money management') / 'Scraper' / 'Outputs'
-    referenceFolder = pathlib.Path('Money management') / 'Scraper' / 'Reference'
+    statementFolder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Statements'
+    outputFolder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Outputs'
+    referenceFolder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Reference'
     
     allData = pd.DataFrame(columns=['date1', 'date2', 'vendor', 'debit', 'credit', 'bank', 'account', 'categoryAuto', 'categoryManual', 'person'])
 
     for filename in os.listdir(statementFolder):
         documentPath = os.path.join(statementFolder, filename)
         filenameData = re.findall(r'([^-]+) - ([^-]+) - ([^-]+) - ([^-]+)(- [^-]+)?', filename)
-        processedToken = "- prc YYYY-MM-DD"
+        processedToken = "- prc YYYY-MM-DD" # Needed?
 
         if filename[-20:-4].startswith('- prc'):
             continue
@@ -39,7 +39,7 @@ def runEngine():
                     allData = pd.concat([allData, data], ignore_index=True)
                 else:
                     print("Error: \"{}\" is not a recognized account type (i.e., checking, amex, mastercard, or visa).".format(filename))
-                
+
                 # nameChange(documentPath) ## REMOVED FOR TESTING
             
             else:
@@ -60,6 +60,7 @@ def nameChange(documentPath):
 def outputEngine(dfScraped, outputFolder, outputChoice, referenceFolder):
     outputPath = os.path.join(outputFolder, 'output_data.xlsx')
 
+    # SCRAPED AND EXTRACT
     if os.path.exists(outputPath):
         with pd.ExcelWriter(outputPath, mode='a', if_sheet_exists='overlay') as writer:
             dfExcel = pd.read_excel(outputPath, sheet_name='Sheet1')
@@ -71,7 +72,7 @@ def outputEngine(dfScraped, outputFolder, outputChoice, referenceFolder):
                 categoryChoice = input("\nDo you want to automatically categorize new entries? Y/N ")
             
             if categoryChoice.lower() == 'y':
-                dfUnique = categoryLookUp.checkEngine(dfUnique, referenceFolder)
+                dfUnique = categoryLookUp.lookUpEngine(dfUnique, referenceFolder)
 
             dfUnique.to_excel(writer, sheet_name='Sheet1', index=False)
             print("(Scraped and extract) Data saved as Excel to:", outputPath)
@@ -80,13 +81,14 @@ def outputEngine(dfScraped, outputFolder, outputChoice, referenceFolder):
                 dfUnique.to_csv(outputPath, index=False)
                 print("(Scraped and extract) Data saved as CSV to:", outputPath)
 
+    # SCRAPED ONLY
     else:
         categoryChoice = ''
         while categoryChoice.lower() not in ['y', 'n']:
             categoryChoice = input("\nDo you want to automatically categorize new entries? Y/N ")
 
         if categoryChoice.lower() == 'y':
-            dfScraped = categoryLookUp.checkEngine(dfScraped, referenceFolder)
+            dfScraped = categoryLookUp.lookUpEngine(dfScraped, referenceFolder)
         
         dfScraped.to_excel(outputPath, index=False)
         print("(Scraped only) Data saved as Excel to:", outputPath)
