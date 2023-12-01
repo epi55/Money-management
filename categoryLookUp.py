@@ -2,6 +2,7 @@
 # SEE: https://github.com/greggles/mcc-codes/blob/main/mcc_codes.csv
 
 import pandas as pd
+import numpy as np
 import re
 import os
 
@@ -18,7 +19,11 @@ def lookUpVendor(vendorPostClean, referenceFolder):
     referencePath = os.path.join(referenceFolder, 'categoryLookUp.csv')
     dfLookUp = pd.read_csv(referencePath)
     print(dfLookUp)
-    
+
+    # NOTE: Likely, this test will never be used unless script is ran as an original init
+    if dfLookUp.empty:
+        dfLookUp.loc[0] = np.nan
+
     if dfLookUp.isin([vendorPostClean]).any().any():
         return list(dfLookUp.columns[dfLookUp.isin([vendorPostClean]).any()])
     else:
