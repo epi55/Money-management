@@ -47,7 +47,7 @@ def lookUpVendor(vendorPostClean, referenceFolder):
                         print("Category names do not match. Please try again.")
 
             dfLookUp = dfLookUp.assign(**{newCategoryName: vendorPostClean})
-            dfLookUp.to_csv(referencePath, index=False)
+            # dfLookUp.to_csv(referencePath, index=False)
             print("New category added: \"{}\". \"{}\" assigned to category.".format(newCategoryName, vendorPostClean))
          
         # TODO: Break with 'back'/quit
@@ -65,9 +65,12 @@ def lookUpVendor(vendorPostClean, referenceFolder):
             dfLookUp.loc[mask.idxmax(), existingCategoryName] = vendorPostClean
             #dfLookUp.loc[dfLookUp[existingCategoryName].first_valid_index(), existingCategoryName] = vendorPostClean
             #dfLookUp.at[(len(dfLookUp[existingCategoryName]) + 1), existingCategoryName] = vendorPostClean
-            dfLookUp.to_csv(referencePath, index=False)
+            # dfLookUp.to_csv(referencePath, index=False)
 
             print("Existing category amended: \"{}\". \"{}\" assigned to category.".format(existingCategoryName, vendorPostClean))
+
+        ## NOTE: Just added this
+        dfLookUp.to_csv(referencePath, index=False)
 
 ## NOTE: NEED TO RETURN AN UPDATED DATAFRAME BACK TO mainScrape.py
 

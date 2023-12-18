@@ -5,9 +5,9 @@ import re
 # from nltk.corpus import stopwords
 import numpy as np
 import pandas as pd
-# import openpyxl
-# from openpyxl.workbook import Workbook
-# from openpyxl import load_workbook
+import openpyxl
+from openpyxl.workbook import Workbook
+from openpyxl import load_workbook
 import checkScrape
 import creditScrape
 import categoryLookUp

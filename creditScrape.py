@@ -22,7 +22,7 @@ def extractEngine(filename, filenameData, documentPath):
         print("##########\n# ERROR\n# \"{}\" is not a recognized bank.\n# Check filename or add additional code to parse file.\n##########".format(filename))
     
     cleanDataTypes(df, filenameData)
-    cleanDates(df)
+    cleanDates(df, filenameData)
     cleanStructure(df, filenameData)
 
     return df
@@ -63,9 +63,12 @@ def migrateCredits(credit):
     credit = pd.to_numeric(credit)
     return credit if credit > 0 else None
 
-def cleanDates(df):
+def cleanDates(df, filenameData):
     for index, row in df.iterrows():
-        date = pd.to_datetime(row['date1'], format='%d-%b-%y', errors='coerce')
+        if filenameData[0][1] == 'rbc':
+            date = pd.to_datetime(row['date1'], format='%m/%d/%Y', errors='coerce')
+        else:
+            date = pd.to_datetime(row['date1'], format='%d-%b-%y', errors='coerce')
         if not pd.isna(date):
             df.at[index, 'date1'] = date.strftime('%Y-%m-%d')
     
