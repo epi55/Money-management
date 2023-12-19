@@ -11,6 +11,7 @@
 
 ## FUTURE
 * Enhancement: NLP to identify categories for transactions based on vendor description.
+* Enhancement: Merchant Category Codes (MCC) to identify categories for transactions.
 * Enhancement: Data analysis and visualization. For example, sums of categories (and sub-categories) in a Sankey diagram to represent how the money was used and where it went.
 * New module: Implement an automated biweekly Excel spreadsheet. Instead of manual entry every two weeks, relevant data will be extracted from inputs (e.g. pay stub, credit and checking statements), processed, calculated, and presented in a dashboard similar to existing manual Excel.
 * New module: Saving and investment data extraction and analysis.
