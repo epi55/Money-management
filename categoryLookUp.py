@@ -1,6 +1,3 @@
-# Future work (after lookup): MCC Merchant Category Codes needed for Mastercard, Visa, and American Express
-# SEE: https://github.com/greggles/mcc-codes/blob/main/mcc_codes.csv
-
 import pandas as pd
 import numpy as np
 import re
@@ -13,12 +10,12 @@ def lookUpEngine(df, referenceFolder):
             vendorPreClean = df.at[index, 'vendor']
             vendorPostClean = re.sub(r'(?<=\w) +(?=\w)|(?<=\w) +$|^ +| +(?=\w)', '', vendorPreClean)
             df.at[index, 'categoryAuto'] = lookUpVendor(vendorPostClean, referenceFolder)
+    
     return df
 
 def lookUpVendor(vendorPostClean, referenceFolder):
-    referencePath = os.path.join(referenceFolder, 'categoryLookUp.csv')
-    dfLookUp = pd.read_csv(referencePath)
-    print(dfLookUp)
+    referenceFile = os.path.join(referenceFolder, 'categoryLookUp.csv')
+    dfLookUp = pd.read_csv(referenceFile)
 
     # NOTE: Likely, this test will never be used unless script is ran as an original init
     if dfLookUp.empty:
@@ -31,11 +28,10 @@ def lookUpVendor(vendorPostClean, referenceFolder):
         categoryChoice = input("{} not found in Look Up Tables.\n\nThe available categories are: {}.\n\nWould you like to (1) create a new category or (2) add to an existing category? ".format(vendorPostClean, existingCategories))
         newCategoryName = ''
 
-        # TODO: Break with 'back'/quit
         if categoryChoice == '1':
             while True:
                 newCategoryName = input("What is the new category? ")
-                if newCategoryName.lower == ('back'):
+                if newCategoryName.lower == ('back') or newCategoryName.lower == ('quit'):
                     break
                 elif newCategoryName in existingCategories:
                     print("Cateogry already exists. Please enter a new category name.")
@@ -46,31 +42,38 @@ def lookUpVendor(vendorPostClean, referenceFolder):
                     else:
                         print("Category names do not match. Please try again.")
 
-            dfLookUp = dfLookUp.assign(**{newCategoryName: vendorPostClean})
-            # dfLookUp.to_csv(referencePath, index=False)
-            print("New category added: \"{}\". \"{}\" assigned to category.".format(newCategoryName, vendorPostClean))
+            # TODO BUILD OUT
+            if newCategoryName == ('back') or newCategoryName == ('quit'):
+                pass
+            else:
+                dfLookUp = dfLookUp.assign(**{newCategoryName: vendorPostClean})
+                # dfLookUp.to_csv(referenceFile, index=False)
+                print("New category added: \"{}\". \"{}\" assigned to category.".format(newCategoryName, vendorPostClean))
          
-        # TODO: Break with 'back'/quit
         if categoryChoice == '2':
             while True:
                 existingCategoryName = input("What category should vendor be added to? ")
-                if existingCategoryName == ('back'):
+                if existingCategoryName.lower == ('back') or existingCategoryName.lower == ('quit'):
                     break
                 elif existingCategoryName in existingCategories:
                     break
                 else:
                     print("Invalid input. Please enter an existing category name. ")
             
-            mask = dfLookUp[existingCategoryName].isna()
-            dfLookUp.loc[mask.idxmax(), existingCategoryName] = vendorPostClean
-            #dfLookUp.loc[dfLookUp[existingCategoryName].first_valid_index(), existingCategoryName] = vendorPostClean
-            #dfLookUp.at[(len(dfLookUp[existingCategoryName]) + 1), existingCategoryName] = vendorPostClean
-            # dfLookUp.to_csv(referencePath, index=False)
+            # TODO BUILD OUT
+            if existingCategoryName == ('back') or existingCategoryName == ('quit'):
+                pass
+            else:
+                mask = dfLookUp[existingCategoryName].isna()
+                dfLookUp.loc[mask.idxmax(), existingCategoryName] = vendorPostClean
+                #dfLookUp.loc[dfLookUp[existingCategoryName].first_valid_index(), existingCategoryName] = vendorPostClean
+                #dfLookUp.at[(len(dfLookUp[existingCategoryName]) + 1), existingCategoryName] = vendorPostClean
+                # dfLookUp.to_csv(referenceFile, index=False)
 
             print("Existing category amended: \"{}\". \"{}\" assigned to category.".format(existingCategoryName, vendorPostClean))
 
         ## NOTE: Just added this
-        dfLookUp.to_csv(referencePath, index=False)
+        dfLookUp.to_csv(referenceFile, index=False)
 
 ## NOTE: NEED TO RETURN AN UPDATED DATAFRAME BACK TO mainScrape.py
 
