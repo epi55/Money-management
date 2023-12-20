@@ -22,3 +22,6 @@
 * Created a script (reverseNameChange.py) to support development testing; script modifies file names, if code errors occur. (2023/11/10)
 * Revised script to check for an existing Excel file and add non-duplicates to its data, preserving unique data added post-scraping (e.g. user input like categories). (2023/11/19)
 * Revised output function to include both Excel and Excel + CSV outputs. (2023/11/20)
+
+## KNOWN ISSUES
+* Certain banks don't provide statement downloads (or are poor). Manual processing of statements required. Some code features might reduce manual processing, including: (1) detecting and replacing certain characters in strings (e.g. '$') that cause errors; (2) dynamically detecting date patterns; and (3) dynamically detecting debit and credit values in merged columns (e.g. based on sampling of known vendor behavior).
