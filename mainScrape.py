@@ -8,9 +8,9 @@ import pandas as pd
 import openpyxl
 from openpyxl.workbook import Workbook
 from openpyxl import load_workbook
-import checkScrape
-import creditScrape
-import categoryLookUp
+import checkScrape # custom script
+import creditScrape # custom script
+import categoryLookUp # custom script
 import pathlib
 import datetime
 

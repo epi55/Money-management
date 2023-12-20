@@ -3,15 +3,21 @@ import numpy as np
 import re
 import os
 
-# NOTE / TODO : iterrows is inefficient; how can performance be improved?
+# TODO : iterrows is inefficient; how can performance be improved?
+# NOTE:
+# function iterates through df, identifies whether categoryAuto column is empty, if empty it cleans vendor description,
+# sends vendor description into another function to identify whether it can be automatically categorized, and then
+# returns the updated dataframe back to mainScrape.py 
 def lookUpEngine(df, referenceFolder):
     for index, row in df.iterrows():
         if pd.isna(df.at[index, 'categoryAuto']):
             vendorPreClean = df.at[index, 'vendor']
+            # NOTE: regex below removes extra spaces in string (before, between, after)
             vendorPostClean = re.sub(r'(?<=\w) +(?=\w)|(?<=\w) +$|^ +| +(?=\w)', '', vendorPreClean)
             df.at[index, 'categoryAuto'] = lookUpVendor(vendorPostClean, referenceFolder)
     
-    return df
+    # NOTE: returns modified df back to mainScrape.py
+    return df 
 
 def lookUpVendor(vendorPostClean, referenceFolder):
     referenceFile = os.path.join(referenceFolder, 'categoryLookUp.csv')
@@ -72,10 +78,7 @@ def lookUpVendor(vendorPostClean, referenceFolder):
 
             print("Existing category amended: \"{}\". \"{}\" assigned to category.".format(existingCategoryName, vendorPostClean))
 
-        ## NOTE: Just added this
         dfLookUp.to_csv(referenceFile, index=False)
-
-## NOTE: NEED TO RETURN AN UPDATED DATAFRAME BACK TO mainScrape.py
 
 # Check category column
 #
