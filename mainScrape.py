@@ -72,7 +72,7 @@ def outputEngine(dfScraped, outputFolder, outputChoice, referenceFolder):
                 categoryChoice = input("\nDo you want to automatically categorize new entries? Y/N ")
             
             if categoryChoice.lower() == 'y':
-                dfUnique = categoryLookUp.lookUpEngine(dfUnique, referenceFolder)
+                dfUnique = categoryLookUp.lookup_engine(dfUnique, referenceFolder)
 
             dfUnique.to_excel(writer, sheet_name='Sheet1', index=False)
             print("(Scraped and extract) Data saved as Excel to:", outputPath)
@@ -88,7 +88,7 @@ def outputEngine(dfScraped, outputFolder, outputChoice, referenceFolder):
             categoryChoice = input("\nDo you want to automatically categorize new entries? Y/N ")
 
         if categoryChoice.lower() == 'y':
-            dfScraped = categoryLookUp.lookUpEngine(dfScraped, referenceFolder)
+            dfScraped = categoryLookUp.lookup_engine(dfScraped, referenceFolder)
         
         dfScraped.to_excel(outputPath, index=False)
         print("(Scraped only) Data saved as Excel to:", outputPath)
