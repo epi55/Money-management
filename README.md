@@ -8,6 +8,7 @@
   * Status: Developed and debugging.
 * Create a lookup dictionary to populate recurring cost categories (e.g. groceries).
   * Status: Developed and testing core functionality.
+  * Supplementing development with a stand-alone script to take existing manual entries and enter into reference document.
 
 ## FUTURE
 * Enhancement: NLP to identify categories for transactions based on vendor description.
@@ -25,3 +26,7 @@
 
 ## KNOWN ISSUES
 * Certain banks don't provide statement downloads (or are poor). Manual processing of statements required. Some code features might reduce manual processing, including: (1) detecting and replacing certain characters in strings (e.g. '$') that cause errors; (2) dynamically detecting date patterns; and (3) dynamically detecting debit and credit values in merged columns (e.g. based on sampling of known vendor behavior).
+
+## Script explanations:
+### categoryTrainer.py
+* Purpose: ETL: Extract existing entries from output_data.csv; transform data; and load into category_reference.csv.  
