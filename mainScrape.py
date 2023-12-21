@@ -1,31 +1,28 @@
 # IMPORTS
 import os
 import re
-# import nltk
-# from nltk.corpus import stopwords
 import numpy as np
 import pandas as pd
-import openpyxl
-from openpyxl.workbook import Workbook
 from openpyxl import load_workbook
-import checkScrape # custom script
-import creditScrape # custom script
-import categoryLookUp # custom script
+from openpyxl.workbook import Workbook
 import pathlib
 import datetime
+import checkScrape # custom script
+import creditScrape # custom script
+import categoryLookup # custom script
+
+## future IMPORTS
+# import nltk
+# from nltk.corpus import stopwords
 
 # ENGINES
-def runEngine():
-    statementFolder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Statements'
-    outputFolder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Outputs'
-    referenceFolder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Reference'
-    
+def run_engine(statement_folder, output_folder, reference_folder):
     allData = pd.DataFrame(columns=['date1', 'date2', 'vendor', 'debit', 'credit', 'bank', 'account', 'categoryAuto', 'categoryManual', 'person'])
 
-    for filename in os.listdir(statementFolder):
-        documentPath = os.path.join(statementFolder, filename)
+    for filename in os.listdir(statement_folder):
+        documentPath = os.path.join(statement_folder, filename)
         filenameData = re.findall(r'([^-]+) - ([^-]+) - ([^-]+) - ([^-]+)(- [^-]+)?', filename)
-        processedToken = "- prc YYYY-MM-DD" # Needed?
+        processedToken = '- prc YYYY-MM-DD' # Needed?
 
         if filename[-20:-4].startswith('- prc'):
             continue
@@ -46,7 +43,7 @@ def runEngine():
                 print("Error: \"{}\" is not a CSV file and will not be processed.".format(filename))
 
     outputChoice = input("## '1' for CSV ## '2' for EXCEL: ")
-    outputEngine(allData, outputFolder, outputChoice, referenceFolder)
+    outputEngine(allData, output_folder, outputChoice, reference_folder)
 
 def nameChange(documentPath):
     currentDate = datetime.datetime.now()
@@ -57,8 +54,8 @@ def nameChange(documentPath):
     newFilename = "{} - prc {}.csv".format(filenameWithoutExtension, dateStr)
     os.rename(oldFilename, newFilename)
 
-def outputEngine(dfScraped, outputFolder, outputChoice, referenceFolder):
-    outputPath = os.path.join(outputFolder, 'output_data.xlsx')
+def outputEngine(dfScraped, output_folder, outputChoice, reference_folder):
+    outputPath = os.path.join(output_folder, 'output_data.xlsx')
 
     # SCRAPED AND EXTRACT
     if os.path.exists(outputPath):
@@ -72,12 +69,12 @@ def outputEngine(dfScraped, outputFolder, outputChoice, referenceFolder):
                 categoryChoice = input("\nDo you want to automatically categorize new entries? Y/N ")
             
             if categoryChoice.lower() == 'y':
-                dfUnique = categoryLookUp.lookup_engine(dfUnique, referenceFolder)
+                dfUnique = categoryLookup.lookup_engine(dfUnique, reference_folder)
 
             dfUnique.to_excel(writer, sheet_name='Sheet1', index=False)
             print("(Scraped and extract) Data saved as Excel to:", outputPath)
             if outputChoice == '1':
-                outputPath = os.path.join(outputFolder, 'output_data.csv')
+                outputPath = os.path.join(output_folder, 'output_data.csv')
                 dfUnique.to_csv(outputPath, index=False)
                 print("(Scraped and extract) Data saved as CSV to:", outputPath)
 
@@ -88,14 +85,17 @@ def outputEngine(dfScraped, outputFolder, outputChoice, referenceFolder):
             categoryChoice = input("\nDo you want to automatically categorize new entries? Y/N ")
 
         if categoryChoice.lower() == 'y':
-            dfScraped = categoryLookUp.lookup_engine(dfScraped, referenceFolder)
+            dfScraped = categoryLookup.lookup_engine(dfScraped, reference_folder)
         
         dfScraped.to_excel(outputPath, index=False)
         print("(Scraped only) Data saved as Excel to:", outputPath)
         if outputChoice == '1':
-            outputPath = os.path.join(outputFolder, 'output_data.csv')
+            outputPath = os.path.join(output_folder, 'output_data.csv')
             dfScraped.to_csv(outputPath, index=False)
             print("(Scraped only) Data saved as CSV to:", outputPath)
 
 # RUN
-runEngine()
+statement_folder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Statements'
+output_folder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Outputs'
+reference_folder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Reference'
+run_engine(statement_folder, output_folder, reference_folder)
