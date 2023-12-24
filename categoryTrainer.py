@@ -13,8 +13,10 @@ def setup_engine(output_file, reference_file):
     print(df_output_file)
 
     for index, row in df_output_file.iterrows():
+        # NOTE: pass by empty cells
         if pd.isna(df_output_file.at[index, 'categoryAuto']) == True:
             continue
+        # NOTE: if cell isn't empty, process it
         else:
             vendor_preclean = df_output_file.at[index, 'vendor']
             # NOTE: regex below removes extra spaces in string (before, between, after)
@@ -32,6 +34,7 @@ def add_vendor():
     pass
 
 # RUN
+## TODO: Can these be done together? output_folder and output_file, etc.
 statement_folder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Statements'
 
 output_folder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Outputs'
