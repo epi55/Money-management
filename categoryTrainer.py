@@ -16,6 +16,8 @@ def setup_engine(output_file, reference_file):
 
     for index, row in df_output_file.iterrows():
         # NOTE: CLEAN CATEGORY AND VENDOR COLUMNS
+        # TODO: Need to make sure not all spaces are removed via regex
+        # TODO: Remove *; * can be used later to identify unique/non-unique categorizations
         if pd.isna(df_output_file.at[index, 'categoryAuto']) == False:
             category_preclean = df_output_file.at[index, 'categoryAuto']
             category = re.sub(r'(?<=\w) +(?=\w)|(?<=\w) +$|^ +| +(?=\w)', '', category_preclean).lower()
@@ -24,13 +26,20 @@ def setup_engine(output_file, reference_file):
             vendor = re.sub(r'(?<=\w) +(?=\w)|(?<=\w) +$|^ +| +(?=\w)', '', vendor_preclean).lower()
 
             if category in df_reference_file['Category'].values:
-                if vendor not in df_reference_file.loc[df_reference_file['Category'] == category, 'Vendor'].values[0]: #loc
-                    df_reference_file.loc[df_reference_file['Category'] == category, 'Vendor'] += [vendor] #loc
+                if vendor not in df_reference_file.loc[df_reference_file['Category'] == category, 'Vendor'].values[0]:
+                    print(type(df_reference_file.loc[df_reference_file['Category'] == category, 'Vendor']).values)
             else:
                 df_reference_file = pd.concat([df_reference_file, pd.DataFrame([{'Category': category, 'Vendor': vendor}])], ignore_index=True)
 
+
+            # if category in df_reference_file['Category'].values:
+            #     if vendor not in df_reference_file.loc[df_reference_file['Category'] == category, 'Vendor'].values[0]:
+            #         df_reference_file.loc[df_reference_file['Category'] == category, 'Vendor'].values[0].append(vendor)
+            # else:
+            #     df_reference_file = pd.concat([df_reference_file, pd.DataFrame([{'Category': category, 'Vendor': vendor}])], ignore_index=True)
+
     print(df_reference_file)
-    print(df_reference_file.loc[df_reference_file['Category'] == 'transfer', 'Vendor'].values[0])
+    # print(df_reference_file.loc[df_reference_file['Category'] == 'transfer', 'Vendor'].values[0])
 
     # df_reference_file.to_csv(reference_file, index=False)
 
