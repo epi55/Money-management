@@ -1,4 +1,3 @@
-# IMPORTS
 import os
 import re
 import numpy as np
@@ -98,4 +97,5 @@ def outputEngine(dfScraped, output_folder, outputChoice, reference_folder):
 statement_folder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Statements'
 output_folder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Outputs'
 reference_folder = pathlib.Path('Projects') / 'Money Management' / 'Scraper' / 'Reference'
+
 run_engine(statement_folder, output_folder, reference_folder)
